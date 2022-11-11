@@ -32,13 +32,9 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.PROGRAM_ID);
 (async () => {
   const options = {
     commitment: "processed" as Commitment,
-    wsEndpoint: "wss://api.devnet.solana.com/",
+    wsEndpoint: process.env.WS_ENDPOINT,
   };
-  const connectedCluster = new Connection(
-    "https://api.devnet.solana.com",
-    options
-  );
-  console.log("LOCK_SECRET", process.env.LOCK_SECRET);
+  const connectedCluster = new Connection(process.env.NETWORK, options);
 
   const lockWallet = walletFromSecret(process.env.LOCK_SECRET);
   const triggerAccount = await getTriggerPda(
@@ -50,8 +46,21 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.PROGRAM_ID);
   // Subscribe to assets on blockchain changes
 
   console.log("Listening...");
-  connectedCluster.onAccountChange(triggerAccount, async () => {
-    console.log("State change, unlocking door");
-    // Trigger door to unlock
-  });
+  connectedCluster.onAccountChange(
+    triggerAccount,
+    async (triggerState: any) => {
+      console.log(triggerState);
+
+      // Check if it's triggerState.counter that changes
+      console.log("State change, unlocking door");
+      // Trigger door to unlock
+      fetch(process.env.UNLOCK_ENDPOINT, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+        },
+        method: "POST",
+      });
+    }
+  );
 })();
