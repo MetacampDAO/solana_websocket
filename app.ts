@@ -1,6 +1,7 @@
 import { Connection, Commitment, PublicKey, Keypair } from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
+import fetch from "node-fetch";
 
 require("dotenv").config({ path: ".env" });
 
