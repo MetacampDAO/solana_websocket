@@ -2,9 +2,10 @@ import { Connection, Commitment, PublicKey, Keypair } from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
 
-require("dotenv").config();
+require("dotenv").config({ path: ".env" });
 
 const walletFromSecret = (str: string) => {
+  console.log(str);
   const passDecodeKp = bs58.decode(str);
   const passU8IntKp = new Uint8Array(
     passDecodeKp.buffer,
@@ -49,18 +50,23 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.PROGRAM_ID);
   connectedCluster.onAccountChange(
     triggerAccount,
     async (triggerState: any) => {
-      console.log(triggerState);
-
-      // Check if it's triggerState.counter that changes
-      console.log("State change, unlocking door");
-      // Trigger door to unlock
-      fetch(process.env.UNLOCK_ENDPOINT, {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
-        },
-        method: "POST",
-      });
+      try {
+        console.log(triggerState);
+  
+        // Check if it's triggerState.counter that changes
+        console.log("State change, unlocking door");
+        // Trigger door to unlock
+        fetch(process.env.UNLOCK_ENDPOINT, {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+          },
+          method: "POST",
+        });
+      } catch (err) {
+        const errMessage = err instanceof Error ? err.message : 'unknown error';
+        console.log('Error:', errMessage)
+      }
     }
   );
 })();
