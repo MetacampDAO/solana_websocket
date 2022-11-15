@@ -11,7 +11,7 @@ export type MetacampAccessLock = {
           "isSigner": false
         },
         {
-          "name": "pass",
+          "name": "lock",
           "isMut": true,
           "isSigner": true
         },
@@ -159,6 +159,10 @@ export type MetacampAccessLock = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "latestMint",
+            "type": "publicKey"
+          },
           {
             "name": "count",
             "type": "u32"
@@ -205,7 +209,7 @@ export const IDL: MetacampAccessLock = {
           "isSigner": false
         },
         {
-          "name": "pass",
+          "name": "lock",
           "isMut": true,
           "isSigner": true
         },
@@ -353,6 +357,10 @@ export const IDL: MetacampAccessLock = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "latestMint",
+            "type": "publicKey"
+          },
           {
             "name": "count",
             "type": "u32"

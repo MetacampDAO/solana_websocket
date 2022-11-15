@@ -11,7 +11,7 @@
           "isSigner": false
         },
         {
-          "name": "pass",
+          "name": "lock",
           "isMut": true,
           "isSigner": true
         },
@@ -160,6 +160,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "latestMint",
+            "type": "publicKey"
+          },
+          {
             "name": "count",
             "type": "u32"
           }
@@ -189,5 +193,8 @@
       "name": "InsufficientToken",
       "msg": "Insufficient token amount"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "DUkejfsxjDfoHpAfED6ZmHc4gqPeYamSSHBh7ypq6Zjp"
+  }
 }

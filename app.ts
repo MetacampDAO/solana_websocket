@@ -2,6 +2,8 @@ import { Connection, Commitment, PublicKey, Keypair } from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
 import fetch from "node-fetch";
+import { PrismaClient } from "@prisma/client";
+import { initAccessLockClient } from "./src/program";
 
 require("dotenv").config({ path: ".env" });
 
@@ -28,8 +30,7 @@ const getTriggerPda = async (lockPubkey: PublicKey, programId: PublicKey) => {
 
   return triggerAccount;
 };
-
-const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.PROGRAM_ID);
+const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.ACCESS_LOCK_PROGRAM_ID);
 
 (async () => {
   const options = {
@@ -51,9 +52,24 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.PROGRAM_ID);
   connectedCluster.onAccountChange(
     triggerAccount,
     async (triggerState: any) => {
+      console.log("triggerState", triggerState);
+
       try {
-        console.log(triggerState);
-  
+        // DESERAILIZE triggerState
+        const lockClient = await initAccessLockClient();
+        const decoded = await lockClient.fetchTriggerState();
+        // console.log("fetchTriggerState", decoded);
+
+        // console.log(
+        //   "triggerState.data",
+        //   triggerState.data.slice(0, 8).toString("hex")
+        // );
+        // const xxx = lockClient.accessLockProgram.coder.accounts.decodeUnchecked<
+        //   anchor.IdlAccounts<MetacampAccessLock>["trigger"]
+        // >("trigger", triggerState.data);
+
+        // console.log("xxx", xxx);
+
         // Check if it's triggerState.counter that changes
         console.log("State change, unlocking door");
         // Trigger door to unlock
@@ -64,9 +80,23 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.PROGRAM_ID);
           },
           method: "POST",
         });
+
+        // LOOKUP MINT IN MEMBERSHIIP_NFTS
+        const prisma = new PrismaClient();
+        const membershipNftDb = await prisma.membership_nfts.findUnique({
+          where: { mint: decoded.latestMint.toString() },
+        });
+
+        // CREATE ENTRIES WITH MEMBERSHIP_NFT_ID & MINT ADDRESS
+        await prisma.entries.create({
+          data: {
+            mint: membershipNftDb.mint,
+            membership_nft_id: membershipNftDb.id,
+          },
+        });
       } catch (err) {
-        const errMessage = err instanceof Error ? err.message : 'unknown error';
-        console.log('Error:', errMessage)
+        const errMessage = err instanceof Error ? err.message : "unknown error";
+        console.log("Error:", errMessage);
       }
     }
   );

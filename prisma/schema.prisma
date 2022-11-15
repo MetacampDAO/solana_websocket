@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model membership_nfts {
+  id              Int      @id @default(autoincrement())
+  mint            String   @unique
+  cardinal_url    String
+  email_sent_date Int
+  membership_id   String   @unique
+  entries         entries?
+}
+
+model entries {
+  id                Int             @id @default(autoincrement())
+  mint              String
+  membership_nft_id Int             @unique
+  membership_nft    membership_nfts @relation(fields: [membership_nft_id], references: [id])
+}
