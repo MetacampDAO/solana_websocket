@@ -4,6 +4,7 @@ import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
 import fetch from "node-fetch";
 import { PrismaClient } from "@prisma/client";
 import { initAccessLockClient } from "./src/program";
+import { MetacampAccessLock } from "./src/idl/metacamp_access_lock";
 
 require("dotenv").config({ path: ".env" });
 
@@ -44,6 +45,12 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.ACCESS_LOCK_PROGRAM_ID);
     lockWallet.publicKey,
     ACCESS_LOCK_PROG_ID
   );
+  const lockClient = await initAccessLockClient();
+  const encodedTrigger = await connectedCluster.getAccountInfo(triggerAccount);
+  const decodedTrigger = lockClient.accessLockProgram.coder.accounts.decodeUnchecked<
+    anchor.IdlAccounts<MetacampAccessLock>["trigger"]
+  >("Trigger", encodedTrigger.data);
+  let counter: number = decodedTrigger.count;
 
   console.log("triggerAccount", triggerAccount.toString());
   // Subscribe to assets on blockchain changes
@@ -55,23 +62,15 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.ACCESS_LOCK_PROGRAM_ID);
       console.log("triggerState", triggerState);
 
       try {
-        // DESERAILIZE triggerState
-        const lockClient = await initAccessLockClient();
-        const decoded = await lockClient.fetchTriggerState();
-        // console.log("fetchTriggerState", decoded);
-
-        // console.log(
-        //   "triggerState.data",
-        //   triggerState.data.slice(0, 8).toString("hex")
-        // );
-        // const xxx = lockClient.accessLockProgram.coder.accounts.decodeUnchecked<
-        //   anchor.IdlAccounts<MetacampAccessLock>["trigger"]
-        // >("trigger", triggerState.data);
-
-        // console.log("xxx", xxx);
-
-        // Check if it's triggerState.counter that changes
         console.log("State change, unlocking door");
+        const deserializedTrigger = lockClient.accessLockProgram.coder.accounts.decodeUnchecked<
+          anchor.IdlAccounts<MetacampAccessLock>["trigger"]
+        >("Trigger", triggerState.data);
+        if (deserializedTrigger.count <= counter) {
+          throw Error("Counter did not increase")
+        }
+        counter = deserializedTrigger.count;
+
         // Trigger door to unlock
         fetch(process.env.UNLOCK_ENDPOINT, {
           headers: {
@@ -81,13 +80,14 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.ACCESS_LOCK_PROGRAM_ID);
           method: "POST",
         });
 
+        // Check if it's triggerState.counter that changes
         // LOOKUP MINT IN MEMBERSHIIP_NFTS
         const prisma = new PrismaClient();
         const membershipNftDb = await prisma.membership_nfts.findUnique({
-          where: { mint: decoded.latestMint.toString() },
+          where: { mint: deserializedTrigger.latestMint.toString() },
         });
 
-        // CREATE ENTRIES WITH MEMBERSHIP_NFT_ID & MINT ADDRESS
+        // // CREATE ENTRIES WITH MEMBERSHIP_NFT_ID & MINT ADDRESS
         await prisma.entries.create({
           data: {
             mint: membershipNftDb.mint,

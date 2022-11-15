@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import dotenv from "dotenv";
-import { PublicKey, Connection, Keypair } from "@solana/web3.js";
+import { PublicKey, Connection, Keypair, Commitment } from "@solana/web3.js";
 import { Idl, AnchorProvider } from "@project-serum/anchor";
 import * as metacamp_access_lock from "./idl/metacamp_access_lock";
 import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
@@ -9,7 +9,10 @@ import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 
 dotenv.config();
 
-export const conn: Connection = new Connection(process.env.NETWORK);
+const options = {
+  commitment: "processed" as Commitment,
+};
+export const conn: Connection = new Connection(process.env.NETWORK, options);
 const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.ACCESS_LOCK_PROGRAM_ID);
 
 const walletFromSecret = (str: string) => {
