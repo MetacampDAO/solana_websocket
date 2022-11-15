@@ -2,10 +2,10 @@ import * as anchor from "@project-serum/anchor";
 import dotenv from "dotenv";
 import { PublicKey, Connection, Keypair, Commitment } from "@solana/web3.js";
 import { Idl, AnchorProvider } from "@project-serum/anchor";
-import * as metacamp_access_lock from "./idl/metacamp_access_lock";
 import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
 import { MetacampAccessLock } from "./idl/metacamp_access_lock";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import lockIdl from './idl/metacamp_access_lock.json';
 
 dotenv.config();
 
@@ -42,7 +42,7 @@ export async function initAccessLockClient() {
     passWallet,
     lockWallet,
     triggerAccount,
-    metacamp_access_lock as any,
+    lockIdl as any,
     ACCESS_LOCK_PROG_ID
   );
 }
