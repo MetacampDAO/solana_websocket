@@ -46,6 +46,7 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.ACCESS_LOCK_PROGRAM_ID);
     ACCESS_LOCK_PROG_ID
   );
   const lockClient = await initAccessLockClient();
+  const prisma = new PrismaClient();
   const encodedTrigger = await connectedCluster.getAccountInfo(triggerAccount);
   const decodedTrigger = lockClient.accessLockProgram.coder.accounts.decodeUnchecked<
     anchor.IdlAccounts<MetacampAccessLock>["trigger"]
@@ -82,7 +83,6 @@ const ACCESS_LOCK_PROG_ID = new PublicKey(process.env.ACCESS_LOCK_PROGRAM_ID);
 
         // Check if it's triggerState.counter that changes
         // LOOKUP MINT IN MEMBERSHIIP_NFTS
-        const prisma = new PrismaClient();
         const membershipNftDb = await prisma.membership_nfts.findUnique({
           where: { mint: deserializedTrigger.latestMint.toString() },
         });
